@@ -15,7 +15,7 @@ node {
                     ${scannerHome}/bin/sonar-scanner \
                     -Dsonar.projectKey=my_project_key \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=http://<your-sonarqube-server>:9000 \
+                    -Dsonar.host.url=http://13.229.130.29:8080/manage/pluginManager/:32769 \
                     -Dsonar.login=${SONARQUBE_TOKEN}
                 """
             }
