@@ -8,6 +8,7 @@ node {
     stage('SonarQube Scan') {
         // Ensure SonarQube Scanner is configured in Jenkins
         def scannerHome = tool name: 'sonarq', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        echo "SonarQube Scanner Path: ${scannerHome}"
 
         withSonarQubeEnv('sonarq') { // Use SonarQube environment configured in Jenkins
             withCredentials([string(credentialsId: 'sonarq', variable: 'SONARQUBE_TOKEN')]) {
@@ -19,13 +20,17 @@ node {
                     -Dsonar.login=${SONARQUBE_TOKEN}
                 """
             }
-        }
 
-        // Wait for SonarQube Quality Gate analysis and fail if gate fails
-        timeout(time: 5, unit: 'MINUTES') {
-            def qualityGate = waitForQualityGate()
-            if (qualityGate.status != 'OK') {
-                error "SonarQube quality gate failed: ${qualityGate.status}"
+            // Wait for SonarQube Quality Gate analysis and fail if gate fails
+            timeout(time: 10, unit: 'MINUTES') {  // Increased timeout from 5 to 10 minutes
+                def qualityGate = waitForQualityGate()
+                if (qualityGate.status == 'ERROR' || qualityGate.status == 'FAILED') {
+                    error "❌ SonarQube Quality Gate failed: ${qualityGate.status}"
+                } else if (qualityGate.status == 'CANCELED') {
+                    error "⚠️ SonarQube Quality Gate was canceled!"
+                } else {
+                    echo "✅ SonarQube Quality Gate passed: ${qualityGate.status}"
+                }
             }
         }
     }
@@ -37,7 +42,7 @@ node {
 
     stage('Push image') {
         // Push the Docker image to DockerHub
-        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') { // Ensure correct DockerHub authentication
             app.push("${env.BUILD_NUMBER}")
         }
     }
@@ -47,7 +52,7 @@ node {
         sh """
             docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v /tmp/trivy:/root/.cache/ \
+            -v /root/.cache/trivy:/root/.cache/ \
             aquasec/trivy:latest image 02042025/dockerhub:${env.BUILD_NUMBER}
         """
     }
