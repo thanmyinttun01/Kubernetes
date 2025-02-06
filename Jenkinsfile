@@ -23,13 +23,11 @@ node {
     }
 
     stage('Quality Gate') {
-        steps {
-            script {
-                // Waits for the quality gate result; fails if the gate fails.
-                def qg = waitForQualityGate(credentialsId: 'sonarq')
-                if (qg.status != 'OK') {
-                    error "Quality gate failed: ${qg.status}"
-                }
+        script {
+            // Wait for the quality gate result and fail the pipeline if it fails
+            def qg = waitForQualityGate(credentialsId: 'sonarq')
+            if (qg.status != 'OK') {
+                error "Quality gate failed: ${qg.status}"
             }
         }
     }
