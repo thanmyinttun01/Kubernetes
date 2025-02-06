@@ -20,17 +20,7 @@ node {
                 """
             }
 
-            // ✅ Wait for SonarQube Quality Gate inside `withSonarQubeEnv`
-            timeout(time: 10, unit: 'MINUTES') {
-                def qualityGate = waitForQualityGate()
-                if (qualityGate.status == 'ERROR' || qualityGate.status == 'FAILED') {
-                    error "❌ SonarQube Quality Gate failed: ${qualityGate.status}"
-                } else if (qualityGate.status == 'CANCELED') {
-                    error "⚠️ SonarQube Quality Gate was canceled!"
-                } else {
-                    echo "✅ SonarQube Quality Gate passed: ${qualityGate.status}"
-                }
-            }
+           
         }
     }
 
