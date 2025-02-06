@@ -35,9 +35,19 @@ node {
         app = docker.build("896836667748.dkr.ecr.ap-southeast-1.amazonaws.com/tmt-repo:${env.BUILD_NUMBER}")
     }
 
+    stage('Authenticate with AWS ECR') {
+        script {
+            withCredentials([aws(credentialsId: 'aws-credentials', region: 'ap-southeast-1')]) {
+                sh """
+                    aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 896836667748.dkr.ecr.ap-southeast-1.amazonaws.com
+                """
+            }
+        }
+    }
+
     stage('Push Image') {
         script {
-            docker.withRegistry('https://896836667748.dkr.ecr.ap-southeast-1.amazonaws.com', 'ecr:ap-southeast-1:aws-credentials') {
+            docker.withRegistry('https://896836667748.dkr.ecr.ap-southeast-1.amazonaws.com', '') {
                 app.push("${env.BUILD_NUMBER}")  // Push with build number
             }
         }
