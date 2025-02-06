@@ -21,6 +21,7 @@ Install the following plugins for the demo.
 - Trivy   
 - Docker Pipeline
 - GitHub/Gitlab Integration Plugin
+- Ensure Jenkins has AWS CLI installed.
 - Parameterized trigger Plugin
 
 ## ArgoCD installation 
