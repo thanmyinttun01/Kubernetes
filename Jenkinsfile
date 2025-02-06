@@ -6,11 +6,10 @@ node {
     }
 
     stage('SonarQube Scan') {
-        // Ensure SonarQube Scanner is configured in Jenkins
         def scannerHome = tool name: 'sonarq', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
         echo "SonarQube Scanner Path: ${scannerHome}"
 
-        withSonarQubeEnv('sonarq') { // Use SonarQube environment configured in Jenkins
+        withSonarQubeEnv('sonarq') {
             withCredentials([string(credentialsId: 'sonarq', variable: 'SONARQUBE_TOKEN')]) {
                 sh """
                     ${scannerHome}/bin/sonar-scanner \
@@ -21,8 +20,8 @@ node {
                 """
             }
 
-            // Wait for SonarQube Quality Gate analysis and fail if gate fails
-            timeout(time: 10, unit: 'MINUTES') {  // Increased timeout from 5 to 10 minutes
+            // ✅ Wait for SonarQube Quality Gate inside `withSonarQubeEnv`
+            timeout(time: 10, unit: 'MINUTES') {
                 def qualityGate = waitForQualityGate()
                 if (qualityGate.status == 'ERROR' || qualityGate.status == 'FAILED') {
                     error "❌ SonarQube Quality Gate failed: ${qualityGate.status}"
@@ -36,13 +35,11 @@ node {
     }
 
     stage('Build image') {
-        // Build Docker image and tag it
         app = docker.build("02042025/dockerhub:${env.BUILD_NUMBER}")
     }
 
     stage('Push image') {
-        // Push the Docker image to DockerHub
-        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') { // Ensure correct DockerHub authentication
+        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
             app.push("${env.BUILD_NUMBER}")
         }
     }
@@ -58,7 +55,6 @@ node {
     }
 
     stage('Trigger ManifestUpdate') {
-        // Trigger the 'updatemanifest' job and pass the Docker tag as a parameter
         echo "Triggering updatemanifest job"
         build job: 'updatemanifest', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
     }
