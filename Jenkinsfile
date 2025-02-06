@@ -24,7 +24,6 @@ node {
 
     stage('Quality Gate') {
         script {
-            // Wait for the quality gate result and fail the pipeline if it fails
             def qg = waitForQualityGate(credentialsId: 'sonarq')
             if (qg.status != 'OK') {
                 error "Quality gate failed: ${qg.status}"
@@ -33,13 +32,14 @@ node {
     }
 
     stage('Build Image') {
-        app = docker.build("02042025/dockerhub:${env.BUILD_NUMBER}")
+        app = docker.build("896836667748.dkr.ecr.ap-southeast-1.amazonaws.com/tmt-repo:${env.BUILD_NUMBER}")
     }
 
     stage('Push Image') {
-        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push("latest")  // Also tag as 'latest' for easy retrieval
+        script {
+            docker.withRegistry('https://896836667748.dkr.ecr.ap-southeast-1.amazonaws.com', 'ecr:ap-southeast-1:aws-credentials') {
+                app.push("${env.BUILD_NUMBER}")  // Push with build number
+            }
         }
     }
 
@@ -51,7 +51,7 @@ node {
             -v /root/.cache/trivy:/root/.cache/ \
             aquasec/trivy:latest image \
             --cache-dir /root/.cache/trivy \
-            02042025/dockerhub:${env.BUILD_NUMBER}
+            896836667748.dkr.ecr.ap-southeast-1.amazonaws.com/tmt-repo:${env.BUILD_NUMBER}
         """
     }
 
