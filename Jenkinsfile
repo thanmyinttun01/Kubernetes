@@ -15,7 +15,7 @@ node {
                     ${scannerHome}/bin/sonar-scanner \
                     -Dsonar.projectKey=my_project_key \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=http://13.229.130.29:8080/manage/pluginManager/:32769 \
+                    -Dsonar.host.url=http://13.229.130.29:32769 \
                     -Dsonar.login=${SONARQUBE_TOKEN}
                 """
             }
@@ -43,10 +43,12 @@ node {
     }
 
     stage('Trivy Scan') {
-        // Run Trivy to scan for vulnerabilities in the Docker image
         echo "Running Trivy security scan for the Docker image"
         sh """
-            trivy image 02042025/dockerhub:${env.BUILD_NUMBER}
+            docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v /tmp/trivy:/root/.cache/ \
+            aquasec/trivy:latest image 02042025/dockerhub:${env.BUILD_NUMBER}
         """
     }
 
