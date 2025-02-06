@@ -16,9 +16,11 @@ Jenkins is installed on EC2. Follow the instructions on https://www.jenkins.io/d
 
 Install the following plugins for the demo.
 - Amazon EC2 plugin (No need to set up Configure Cloud after)
-- Docker plugin  
+- Docker plugin
+- Sonarqube Scanner plugin
+- Trivy   
 - Docker Pipeline
-- GitHub Integration Plugin
+- GitHub/Gitlab Integration Plugin
 - Parameterized trigger Plugin
 
 ## ArgoCD installation 
