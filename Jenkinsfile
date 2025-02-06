@@ -23,7 +23,7 @@ node {
     }
 
     stage('SonarQube Quality Gate') {
-        timeout(time: 10, unit: 'MINUTES') { // Ensures waitForQualityGate does not block indefinitely
+        timeout(time: 3, unit: 'MINUTES') { // Ensures waitForQualityGate does not block indefinitely
             def qg = waitForQualityGate()
             if (qg.status != 'OK') {
                 error "Pipeline failed due to SonarQube Quality Gate: ${qg.status}"
