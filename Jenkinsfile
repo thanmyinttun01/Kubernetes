@@ -1,7 +1,7 @@
 node {
     def app
 
-    stage('Clone repository') {
+    stage('Clone Repository') {
         checkout scm
     }
 
@@ -19,18 +19,26 @@ node {
                     -Dsonar.login=${SONARQUBE_TOKEN}
                 """
             }
-
-           
         }
     }
 
-    stage('Build image') {
+    stage('SonarQube Quality Gate') {
+        timeout(time: 10, unit: 'MINUTES') { // Ensures waitForQualityGate does not block indefinitely
+            def qg = waitForQualityGate()
+            if (qg.status != 'OK') {
+                error "Pipeline failed due to SonarQube Quality Gate: ${qg.status}"
+            }
+        }
+    }
+
+    stage('Build Image') {
         app = docker.build("02042025/dockerhub:${env.BUILD_NUMBER}")
     }
 
-    stage('Push image') {
+    stage('Push Image') {
         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
             app.push("${env.BUILD_NUMBER}")
+            app.push("latest")  // Also tag as 'latest' for easy retrieval
         }
     }
 
@@ -40,11 +48,13 @@ node {
             docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v /root/.cache/trivy:/root/.cache/ \
-            aquasec/trivy:latest image 02042025/dockerhub:${env.BUILD_NUMBER}
+            aquasec/trivy:latest image \
+            --cache-dir /root/.cache/trivy \
+            02042025/dockerhub:${env.BUILD_NUMBER}
         """
     }
 
-    stage('Trigger ManifestUpdate') {
+    stage('Trigger Manifest Update') {
         echo "Triggering updatemanifest job"
         build job: 'updatemanifest', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
     }
