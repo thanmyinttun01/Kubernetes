@@ -7,9 +7,9 @@ node {
 
     stage('SonarQube Scan') {
         // Ensure SonarQube Scanner is configured in Jenkins
-        def scannerHome = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        def scannerHome = tool name: 'sonarq', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
 
-        withSonarQubeEnv('SonarQube') { // Use SonarQube environment configured in Jenkins
+        withSonarQubeEnv('sonarq') { // Use SonarQube environment configured in Jenkins
             withCredentials([string(credentialsId: 'sonarq', variable: 'SONARQUBE_TOKEN')]) {
                 sh """
                     ${scannerHome}/bin/sonar-scanner \
